@@ -28,6 +28,7 @@ export interface RSVPState {
   currentWord: string;
   speedMode: SpeedMode;
   currentWPM: number;
+  targetWPM: number;
   totalWords: number;
   startTime: number | null;
   elapsedTime: number;
@@ -38,4 +39,14 @@ export interface RSVPState {
   currentSection: number;
   totalSections: number;
   isComplete: boolean;
+}
+
+export interface HistoryEntry {
+  id: string;
+  title: string;
+  sourceType: 'paste' | 'url' | 'pdf';
+  wordCount: number;
+  avgWPM: number;
+  duration: number;
+  completedAt: string;
 }

@@ -7,8 +7,8 @@ import { SPEED_MODES } from '@/lib/rsvp/speed-profiles';
 interface KeyboardActions {
   togglePlayPause: () => void;
   continueSectionBreak: () => void;
-  skipBackward: (n?: number) => void;
-  skipForward: (n?: number) => void;
+  skipSeconds: (seconds: number) => void;
+  adjustWPM: (delta: number) => void;
   setSpeedMode: (mode: SpeedMode) => void;
   onExit: () => void;
   restart: () => void;
@@ -37,14 +37,31 @@ export function useKeyboardControls(actions: KeyboardActions) {
             actions.continueSectionBreak();
           }
           break;
+        // Skip by 5 seconds: Arrow keys and A/D
         case 'ArrowLeft':
+        case 'KeyA':
           e.preventDefault();
-          actions.skipBackward(5);
+          actions.skipSeconds(-5);
           break;
         case 'ArrowRight':
+        case 'KeyD':
           e.preventDefault();
-          actions.skipForward(5);
+          actions.skipSeconds(5);
           break;
+        // Speed adjustment: W/S and +/-
+        case 'KeyW':
+        case 'Equal': // + key
+        case 'NumpadAdd':
+          e.preventDefault();
+          actions.adjustWPM(50);
+          break;
+        case 'KeyS':
+        case 'Minus': // - key
+        case 'NumpadSubtract':
+          e.preventDefault();
+          actions.adjustWPM(-50);
+          break;
+        // Speed mode presets
         case 'Digit1':
         case 'Numpad1':
           actions.setSpeedMode(SPEED_MODES[0]);

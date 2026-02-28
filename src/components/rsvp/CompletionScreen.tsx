@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useReaderStore } from '@/stores/reader-store';
+import { addHistoryEntry } from '@/lib/history';
 
 interface CompletionScreenProps {
   wordsRead: number;
@@ -10,11 +13,27 @@ interface CompletionScreenProps {
 
 export function CompletionScreen({ wordsRead, startTime, onRestart }: CompletionScreenProps) {
   const router = useRouter();
+  const { sourceType, rawText } = useReaderStore();
+  const savedRef = useRef(false);
 
   const elapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
   const minutes = Math.floor(elapsed / 60);
   const seconds = Math.floor(elapsed % 60);
   const avgWPM = elapsed > 0 ? Math.round(wordsRead / (elapsed / 60)) : 0;
+
+  useEffect(() => {
+    if (savedRef.current || wordsRead === 0) return;
+    savedRef.current = true;
+
+    const title = rawText.slice(0, 60).split('\n')[0].trim() || 'Untitled';
+    addHistoryEntry({
+      title,
+      sourceType: sourceType ?? 'paste',
+      wordCount: wordsRead,
+      avgWPM,
+      duration: Math.round(elapsed),
+    });
+  }, [wordsRead, avgWPM, elapsed, rawText, sourceType]);
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0A0B] z-20">

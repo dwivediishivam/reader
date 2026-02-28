@@ -1,6 +1,5 @@
-import { SpeedMode, TextDocument } from '@/lib/text/types';
-import { SPEED_PROFILES } from './speed-profiles';
-import { getWPMAtIndex, wpmToMs, getWordDelay } from './word-timing';
+import { TextDocument } from '@/lib/text/types';
+import { wpmToMs, getWordDelay } from './word-timing';
 
 export type EngineCallback = (state: {
   currentIndex: number;
@@ -13,7 +12,7 @@ export type EngineCallback = (state: {
 
 export class RSVPEngine {
   private document: TextDocument;
-  private speedMode: SpeedMode;
+  private targetWPM: number;
   private currentIndex: number;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private isRunning = false;
@@ -22,12 +21,12 @@ export class RSVPEngine {
 
   constructor(
     document: TextDocument,
-    speedMode: SpeedMode,
+    targetWPM: number,
     startIndex: number,
     callback: EngineCallback
   ) {
     this.document = document;
-    this.speedMode = speedMode;
+    this.targetWPM = targetWPM;
     this.currentIndex = startIndex;
     this.callback = callback;
   }
@@ -50,8 +49,8 @@ export class RSVPEngine {
     this.pause();
   }
 
-  setSpeedMode(mode: SpeedMode) {
-    this.speedMode = mode;
+  setTargetWPM(wpm: number) {
+    this.targetWPM = Math.max(50, Math.min(2000, wpm));
   }
 
   setIndex(index: number) {
@@ -100,7 +99,7 @@ export class RSVPEngine {
       this.callback({
         currentIndex: this.currentIndex,
         currentWord: words[this.currentIndex],
-        currentWPM: this.getCurrentWPM(),
+        currentWPM: this.targetWPM,
         isSectionBreak: true,
         currentSection: this.getCurrentSection(),
         isComplete: false,
@@ -109,15 +108,14 @@ export class RSVPEngine {
     }
 
     const word = words[this.currentIndex];
-    const wpm = this.getCurrentWPM();
-    const baseMs = wpmToMs(wpm);
+    const baseMs = wpmToMs(this.targetWPM);
     const isParagraphEnd = paragraphBreaks.has(this.currentIndex);
     const delay = getWordDelay(word, baseMs, isParagraphEnd);
 
     this.callback({
       currentIndex: this.currentIndex,
       currentWord: word,
-      currentWPM: Math.round(wpm),
+      currentWPM: Math.round(this.targetWPM),
       isSectionBreak: false,
       currentSection: this.getCurrentSection(),
       isComplete: false,
@@ -127,10 +125,5 @@ export class RSVPEngine {
     this.wordsReadInSession++;
 
     this.timer = setTimeout(() => this.scheduleNext(), delay);
-  }
-
-  private getCurrentWPM(): number {
-    const profile = SPEED_PROFILES[this.speedMode];
-    return getWPMAtIndex(this.wordsReadInSession, profile);
   }
 }

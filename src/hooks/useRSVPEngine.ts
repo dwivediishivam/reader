@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RSVPEngine } from '@/lib/rsvp/engine';
-import { SpeedMode, TextDocument } from '@/lib/text/types';
+import { TextDocument } from '@/lib/text/types';
 
 interface RSVPEngineState {
   isPlaying: boolean;
@@ -18,7 +18,7 @@ interface RSVPEngineState {
 
 export function useRSVPEngine(
   document: TextDocument | null,
-  speedMode: SpeedMode,
+  targetWPM: number,
   startIndex: number
 ) {
   const engineRef = useRef<RSVPEngine | null>(null);
@@ -43,7 +43,7 @@ export function useRSVPEngine(
   useEffect(() => {
     if (!document) return;
 
-    const engine = new RSVPEngine(document, speedMode, startIndex, (update) => {
+    const engine = new RSVPEngine(document, targetWPM, startIndex, (update) => {
       setState(prev => ({
         ...prev,
         currentIndex: update.currentIndex,
@@ -55,10 +55,6 @@ export function useRSVPEngine(
         isPlaying: !update.isSectionBreak && !update.isComplete,
       }));
 
-      if (update.isComplete || update.isSectionBreak) {
-        // Engine paused itself
-      }
-
       setWordsRead(engine.getWordsRead());
     });
 
@@ -67,14 +63,14 @@ export function useRSVPEngine(
     return () => {
       engine.stop();
     };
-  }, [document, startIndex]); // intentionally not re-creating on speedMode change
+  }, [document, startIndex]); // intentionally not re-creating on targetWPM change
 
-  // Sync speed mode changes to engine
+  // Sync targetWPM changes to engine
   useEffect(() => {
     if (engineRef.current) {
-      engineRef.current.setSpeedMode(speedMode);
+      engineRef.current.setTargetWPM(targetWPM);
     }
-  }, [speedMode]);
+  }, [targetWPM]);
 
   const startCountdown = useCallback(() => {
     setState(prev => ({ ...prev, isCountdown: true, countdownValue: 3 }));
@@ -144,6 +140,16 @@ export function useRSVPEngine(
     }));
   }, [state.currentIndex, document]);
 
+  const skipSeconds = useCallback((seconds: number) => {
+    if (!document) return;
+    const wordsToSkip = Math.max(1, Math.round(targetWPM * Math.abs(seconds) / 60));
+    if (seconds > 0) {
+      skipForward(wordsToSkip);
+    } else {
+      skipBackward(wordsToSkip);
+    }
+  }, [targetWPM, document, skipForward, skipBackward]);
+
   const continueSectionBreak = useCallback(() => {
     if (!state.isSectionBreak) return;
     setState(prev => ({ ...prev, isSectionBreak: false, isPlaying: true }));
@@ -172,7 +178,7 @@ export function useRSVPEngine(
   // Auto-pause on tab visibility change
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.hidden && state.isPlaying) {
+      if (window.document.hidden && state.isPlaying) {
         pause();
       }
     };
@@ -192,6 +198,7 @@ export function useRSVPEngine(
     togglePlayPause,
     skipForward,
     skipBackward,
+    skipSeconds,
     continueSectionBreak,
     restart,
     startCountdown,

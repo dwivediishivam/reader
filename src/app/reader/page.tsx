@@ -14,9 +14,9 @@ import { CompletionScreen } from '@/components/rsvp/CompletionScreen';
 
 export default function ReaderPage() {
   const router = useRouter();
-  const { document, speedMode, startIndex, setSpeedMode } = useReaderStore();
+  const { document, speedMode, targetWPM, startIndex, setSpeedMode, setTargetWPM, adjustTargetWPM } = useReaderStore();
 
-  const engine = useRSVPEngine(document, speedMode, startIndex);
+  const engine = useRSVPEngine(document, speedMode, startIndex, targetWPM);
 
   const keyboardActions = useMemo(() => ({
     togglePlayPause: engine.togglePlayPause,
@@ -24,10 +24,11 @@ export default function ReaderPage() {
     skipBackward: engine.skipBackward,
     skipForward: engine.skipForward,
     setSpeedMode,
+    adjustTargetWPM,
     onExit: () => router.push('/'),
     restart: engine.restart,
     isSectionBreak: engine.isSectionBreak,
-  }), [engine, setSpeedMode, router]);
+  }), [engine, setSpeedMode, adjustTargetWPM, router]);
 
   useKeyboardControls(keyboardActions);
 
@@ -76,6 +77,8 @@ export default function ReaderPage() {
         <CompletionScreen
           wordsRead={engine.wordsRead}
           startTime={engine.startTime}
+          sourceType={useReaderStore.getState().sourceType}
+          totalWords={engine.totalWords}
           onRestart={engine.restart}
         />
       )}
@@ -84,10 +87,13 @@ export default function ReaderPage() {
         <RSVPControls
           isPlaying={engine.isPlaying}
           speedMode={speedMode}
+          targetWPM={targetWPM}
           onTogglePlayPause={engine.togglePlayPause}
           onSkipBackward={() => engine.skipBackward(5)}
           onSkipForward={() => engine.skipForward(5)}
           onSpeedModeChange={setSpeedMode}
+          onTargetWPMChange={setTargetWPM}
+          onAdjustTargetWPM={adjustTargetWPM}
           onExit={() => router.push('/')}
           onRestart={engine.restart}
         />

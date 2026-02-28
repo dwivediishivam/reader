@@ -7,6 +7,7 @@ import { TextInput } from '@/components/input/TextInput';
 import { URLInput } from '@/components/input/URLInput';
 import { FileUpload } from '@/components/input/FileUpload';
 import { SpeedModeSelector } from '@/components/rsvp/SpeedModeSelector';
+import { ReadHistory } from '@/components/history/ReadHistory';
 
 type InputMethod = 'paste' | 'url' | 'pdf';
 
@@ -126,11 +127,15 @@ export default function LandingPage() {
         <div className="mt-8 text-center text-xs text-gray-600">
           <p>
             In reader: <kbd className="px-1.5 py-0.5 bg-gray-900 rounded">Space</kbd> play/pause
-            {' '}<kbd className="px-1.5 py-0.5 bg-gray-900 rounded">&larr;&rarr;</kbd> skip words
+            {' '}<kbd className="px-1.5 py-0.5 bg-gray-900 rounded">&larr;&rarr;</kbd><kbd className="px-1.5 py-0.5 bg-gray-900 rounded">A/D</kbd> ±5s
+            {' '}<kbd className="px-1.5 py-0.5 bg-gray-900 rounded">W/S</kbd><kbd className="px-1.5 py-0.5 bg-gray-900 rounded">+/−</kbd> ±50 WPM
             {' '}<kbd className="px-1.5 py-0.5 bg-gray-900 rounded">1-4</kbd> speed modes
             {' '}<kbd className="px-1.5 py-0.5 bg-gray-900 rounded">Esc</kbd> exit
           </p>
         </div>
+
+        {/* Read History */}
+        <ReadHistory />
       </div>
     </div>
   );

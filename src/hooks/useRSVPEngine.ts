@@ -19,7 +19,8 @@ interface RSVPEngineState {
 export function useRSVPEngine(
   document: TextDocument | null,
   speedMode: SpeedMode,
-  startIndex: number
+  startIndex: number,
+  targetWPM: number
 ) {
   const engineRef = useRef<RSVPEngine | null>(null);
   const countdownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,6 +77,13 @@ export function useRSVPEngine(
     }
   }, [speedMode]);
 
+  // Sync targetWPM to engine
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setTargetWPM(targetWPM);
+    }
+  }, [targetWPM]);
+
   const startCountdown = useCallback(() => {
     setState(prev => ({ ...prev, isCountdown: true, countdownValue: 3 }));
 
@@ -122,27 +130,29 @@ export function useRSVPEngine(
     }
   }, [state.isPlaying, state.isCountdown, play, pause]);
 
-  const skipForward = useCallback((words: number = 5) => {
+  const skipForward = useCallback((seconds: number = 5) => {
     if (!engineRef.current || !document) return;
-    const newIndex = Math.min(state.currentIndex + words, document.words.length - 1);
+    const wordsToSkip = Math.round((state.currentWPM || targetWPM) * seconds / 60);
+    const newIndex = Math.min(state.currentIndex + Math.max(wordsToSkip, 1), document.words.length - 1);
     engineRef.current.setIndex(newIndex);
     setState(prev => ({
       ...prev,
       currentIndex: newIndex,
       currentWord: document.words[newIndex],
     }));
-  }, [state.currentIndex, document]);
+  }, [state.currentIndex, state.currentWPM, targetWPM, document]);
 
-  const skipBackward = useCallback((words: number = 5) => {
+  const skipBackward = useCallback((seconds: number = 5) => {
     if (!engineRef.current || !document) return;
-    const newIndex = Math.max(state.currentIndex - words, 0);
+    const wordsToSkip = Math.round((state.currentWPM || targetWPM) * seconds / 60);
+    const newIndex = Math.max(state.currentIndex - Math.max(wordsToSkip, 1), 0);
     engineRef.current.setIndex(newIndex);
     setState(prev => ({
       ...prev,
       currentIndex: newIndex,
       currentWord: document.words[newIndex],
     }));
-  }, [state.currentIndex, document]);
+  }, [state.currentIndex, state.currentWPM, targetWPM, document]);
 
   const continueSectionBreak = useCallback(() => {
     if (!state.isSectionBreak) return;
@@ -172,7 +182,7 @@ export function useRSVPEngine(
   // Auto-pause on tab visibility change
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.hidden && state.isPlaying) {
+      if (window.document.hidden && state.isPlaying) {
         pause();
       }
     };

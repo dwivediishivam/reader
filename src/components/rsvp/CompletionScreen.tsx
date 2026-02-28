@@ -1,20 +1,54 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import type { ReadHistoryEntry } from '@/stores/reader-store';
 
 interface CompletionScreenProps {
   wordsRead: number;
   startTime: number | null;
+  sourceType: 'paste' | 'url' | 'pdf' | null;
+  totalWords: number;
   onRestart: () => void;
 }
 
-export function CompletionScreen({ wordsRead, startTime, onRestart }: CompletionScreenProps) {
+function saveReadHistory(entry: ReadHistoryEntry) {
+  try {
+    const raw = localStorage.getItem('readHistory');
+    const history: ReadHistoryEntry[] = raw ? JSON.parse(raw) : [];
+    history.unshift(entry);
+    // Keep last 50 entries
+    if (history.length > 50) history.length = 50;
+    localStorage.setItem('readHistory', JSON.stringify(history));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+export function CompletionScreen({ wordsRead, startTime, sourceType, totalWords, onRestart }: CompletionScreenProps) {
   const router = useRouter();
+  const savedRef = useRef(false);
 
   const elapsed = startTime ? (Date.now() - startTime) / 1000 : 0;
   const minutes = Math.floor(elapsed / 60);
   const seconds = Math.floor(elapsed % 60);
   const avgWPM = elapsed > 0 ? Math.round(wordsRead / (elapsed / 60)) : 0;
+
+  // Save to history once
+  useEffect(() => {
+    if (savedRef.current || !startTime) return;
+    savedRef.current = true;
+    saveReadHistory({
+      id: crypto.randomUUID(),
+      title: `${wordsRead.toLocaleString()} words`,
+      wordsRead,
+      totalWords,
+      avgWPM,
+      duration: Math.round(elapsed),
+      completedAt: new Date().toISOString(),
+      sourceType: sourceType ?? 'paste',
+    });
+  }, [startTime, wordsRead, totalWords, avgWPM, elapsed, sourceType]);
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0A0A0B] z-20">

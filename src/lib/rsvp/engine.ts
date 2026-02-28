@@ -14,6 +14,7 @@ export type EngineCallback = (state: {
 export class RSVPEngine {
   private document: TextDocument;
   private speedMode: SpeedMode;
+  private targetWPM: number | null = null;
   private currentIndex: number;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private isRunning = false;
@@ -52,6 +53,10 @@ export class RSVPEngine {
 
   setSpeedMode(mode: SpeedMode) {
     this.speedMode = mode;
+  }
+
+  setTargetWPM(wpm: number | null) {
+    this.targetWPM = wpm;
   }
 
   setIndex(index: number) {
@@ -130,6 +135,9 @@ export class RSVPEngine {
   }
 
   private getCurrentWPM(): number {
+    if (this.targetWPM !== null) {
+      return this.targetWPM;
+    }
     const profile = SPEED_PROFILES[this.speedMode];
     return getWPMAtIndex(this.wordsReadInSession, profile);
   }

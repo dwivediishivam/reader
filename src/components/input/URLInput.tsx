@@ -10,6 +10,7 @@ export function URLInput({ onExtracted }: URLInputProps) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [extracted, setExtracted] = useState(false);
 
   const handleExtract = async () => {
     if (!url.trim()) return;
@@ -30,12 +31,32 @@ export function URLInput({ onExtracted }: URLInputProps) {
 
       const data = await res.json();
       onExtracted(data.text);
+      setExtracted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to extract text');
     } finally {
       setLoading(false);
     }
   };
+
+  if (extracted) {
+    return (
+      <div className="p-4 bg-gray-900 rounded-lg border border-gray-800">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-green-400">✓ Text extracted from URL</p>
+          <button
+            onClick={() => {
+              setExtracted(false);
+              setUrl('');
+            }}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Extract another
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

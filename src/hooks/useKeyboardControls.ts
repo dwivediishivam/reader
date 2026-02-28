@@ -10,6 +10,7 @@ interface KeyboardActions {
   skipBackward: (n?: number) => void;
   skipForward: (n?: number) => void;
   setSpeedMode: (mode: SpeedMode) => void;
+  adjustTargetWPM: (delta: number) => void;
   onExit: () => void;
   restart: () => void;
   isSectionBreak: boolean;
@@ -38,12 +39,26 @@ export function useKeyboardControls(actions: KeyboardActions) {
           }
           break;
         case 'ArrowLeft':
+        case 'KeyA':
           e.preventDefault();
           actions.skipBackward(5);
           break;
         case 'ArrowRight':
+        case 'KeyD':
           e.preventDefault();
           actions.skipForward(5);
+          break;
+        case 'KeyW':
+        case 'Equal':
+        case 'NumpadAdd':
+          e.preventDefault();
+          actions.adjustTargetWPM(50);
+          break;
+        case 'KeyS':
+        case 'Minus':
+        case 'NumpadSubtract':
+          e.preventDefault();
+          actions.adjustTargetWPM(-50);
           break;
         case 'Digit1':
         case 'Numpad1':

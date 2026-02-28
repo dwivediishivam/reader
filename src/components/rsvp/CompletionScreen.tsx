@@ -39,7 +39,7 @@ export function CompletionScreen({ wordsRead, startTime, sourceType, totalWords,
     if (savedRef.current || !startTime) return;
     savedRef.current = true;
     saveReadHistory({
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       title: `${wordsRead.toLocaleString()} words`,
       wordsRead,
       totalWords,

@@ -55,7 +55,7 @@ export function ReadHistory() {
               </div>
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <span>{entry.avgWPM} WPM</span>
-                <span>{mins}:{secs.toString().padStart(2, '0')}</span>
+                <span>{mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}</span>
                 <span>{date.toLocaleDateString()}</span>
               </div>
             </div>
